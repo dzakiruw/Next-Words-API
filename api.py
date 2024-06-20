@@ -4,10 +4,18 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import numpy as np
 import pandas as pd
+import os
+import logging
 
+logging.basicConfig(level=logging.DEBUG)
 
 # Load pre-trained model
-model = load_model("model_predict_next_words.h5")
+try:
+    logging.info("Loading model...")
+    model = load_model("model_predict_next_words.h5", compile=False)
+    logging.info("Model loaded successfully.")
+except Exception as e:
+    logging.error("Error loading model: %s", str(e))
 
 df = pd.read_csv('https://raw.githubusercontent.com/Shacent/Local.Ind/main/ML/NextWords/API_DS.csv')
 # Load the CSV files
@@ -20,7 +28,6 @@ total_words = len(tokenizer.word_index) + 1
 max_sequence_len = 10  # replace with your actual max sequence length
 
 app = Flask(__name__)
-
 
 def make_prediction(seed_text, next_words=1):
     output_text = seed_text
@@ -36,6 +43,14 @@ def make_prediction(seed_text, next_words=1):
         seed_text += " " + output_word
         output_text += " " + output_word
     return output_text
+
+@app.route('/')
+def home():
+    return "API is running"
+
+@app.route('/health')
+def health():
+    return "Healthy", 200
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -57,4 +72,5 @@ def predict():
     return jsonify({'predicted_text': seed_text})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port, debug=True)

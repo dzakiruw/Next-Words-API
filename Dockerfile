@@ -8,10 +8,12 @@ WORKDIR /app
 COPY . /app
 
 # Install dependencies
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install gunicorn
 
 # Expose port yang akan digunakan oleh aplikasi Flask
 EXPOSE 8080
 
 # Jalankan aplikasi
-CMD ["python", "api.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "api:app"]
